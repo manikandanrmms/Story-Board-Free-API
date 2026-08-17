@@ -158,7 +158,7 @@
         </div>
         <div class="txt">
           <strong id="dzTitle">Drop a .docx or .pdf, or click to browse</strong>
-          <span id="dzSub">Requirements doc, PRD, spec, meeting notes — anything with product intent</span>
+          <span id="dzSub">Requirements doc, PRD, spec, meeting notes — uploading a new file replaces the current board</span>
         </div>
         <input type="file" id="fileInput" accept=".pdf,.docx,.doc" />
       </label>
@@ -253,13 +253,38 @@
       showError('Please upload a .docx or .pdf file.');
       return;
     }
+
+    // A new document always starts a completely fresh story board.
+    // This prevents stories from the previous document being mixed into the new one.
+    stories = [];
+    idCounter = 1;
+    dragCardId = null;
+    sourceText = "";
     currentFileName = file.name;
+    docPayload = { file };
+
+    // Reset the visible board immediately.
+    boardWrap.innerHTML = '';
+    const freshHero = document.createElement('div');
+    freshHero.className = 'empty-hero';
+    freshHero.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+      <h3>Ready for a new board</h3>
+      <p>Your previous stories were cleared. Generate stories from the new document.</p>
+    `;
+    boardWrap.appendChild(freshHero);
+
+    boardToolbar.style.display = 'none';
+    boardMeta.innerHTML = '';
     el('dzTitle').textContent = file.name;
     el('dzSub').textContent = (file.size/1024).toFixed(0) + " KB — ready to generate locally";
     generateBtn.disabled = false;
-    docPayload = { file };
-    sourceText = "";
     hideError();
+    setStatus(null);
   }
 
   function showError(msg){
